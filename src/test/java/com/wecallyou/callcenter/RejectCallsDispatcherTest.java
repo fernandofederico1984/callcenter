@@ -1,8 +1,8 @@
 package com.wecallyou.callcenter;
 
-import com.wecallyou.callcenter.dispatchers.DefaultDispatcher;
+import com.wecallyou.callcenter.dispatchers.Dispatcher;
 import com.wecallyou.callcenter.dispatchers.Dispatchers;
-import com.wecallyou.callcenter.dispatchers.NoEmployeesAvailableException;
+import com.wecallyou.callcenter.dispatchers.exceptions.NoEmployeesAvailableException;
 import com.wecallyou.callcenter.report.MessageReport;
 import org.junit.Test;
 
@@ -29,7 +29,7 @@ public class RejectCallsDispatcherTest {
 
     @Test
     public void whenMaximumReachedFail() throws Exception{
-        DefaultDispatcher dispatcher = Dispatchers.rejectCallsDispatcher(NUMBER_OF_OPERATORS, NUMBER_OF_SUPERVISORS, NUMBER_OF_DIRECTORS,
+        Dispatcher dispatcher = Dispatchers.rejectCallsDispatcher(NUMBER_OF_OPERATORS, NUMBER_OF_SUPERVISORS, NUMBER_OF_DIRECTORS,
                 MIN_PROCESSING_TIME, MAX_PROCESSING_TIME);
 
         boolean exceptionThrown = false;
@@ -47,7 +47,7 @@ public class RejectCallsDispatcherTest {
         assertThat(report.get(message(0)).getEmployeeType(), is(OPERATOR));
         assertThat(report.get(message(1)).getEmployeeType(), is(SUPERVISOR));
         assertThat(report.get(message(2)).getEmployeeType(), is(DIRECTOR));
-        assertThat(report.size(), is(5));
+        assertThat(report.size(), is(3));
         dispatcher.shutdown(15);
         assertTrue(exceptionThrown);
     }

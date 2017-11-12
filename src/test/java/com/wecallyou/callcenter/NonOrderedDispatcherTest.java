@@ -2,7 +2,7 @@ package com.wecallyou.callcenter;
 
 import com.wecallyou.callcenter.dispatchers.Dispatcher;
 import com.wecallyou.callcenter.dispatchers.Dispatchers;
-import com.wecallyou.callcenter.dispatchers.MaximumMessagesReached;
+import com.wecallyou.callcenter.dispatchers.exceptions.MaximumMessagesReached;
 import com.wecallyou.callcenter.report.MessageReport;
 import org.junit.Test;
 

@@ -3,6 +3,8 @@ package com.wecallyou.callcenter.dispatchers;
 import com.wecallyou.callcenter.Message;
 import com.wecallyou.callcenter.dispatchers.exceptions.DispatchingMessageException;
 import com.wecallyou.callcenter.report.MessageReport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -16,6 +18,8 @@ import java.util.concurrent.TimeUnit;
  * This covers the scenario where the message is being queued up while all the employees are freeing up.
  */
 public class GuaranteeProcessDispatcher implements Dispatcher{
+
+    private static Logger LOG = LoggerFactory.getLogger(DelegatingDispatcher.class);
 
     /**
      * Child Dispatcher. If the message cannot be processed by current dispatcher, it is handled to its child.
@@ -45,7 +49,13 @@ public class GuaranteeProcessDispatcher implements Dispatcher{
 
     @Override
     public void shutdown(long timeOut) {
-        child.shutdown(timeOut);
+        try {
+            child.shutdown(timeOut);
+            guaranteeDeliveryExecutor.shutdown();
+            guaranteeDeliveryExecutor.awaitTermination(timeOut, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            LOG.error("The Dispatcher Could not be shut down");
+        }
     }
 
     @Override

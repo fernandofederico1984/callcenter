@@ -9,7 +9,7 @@ import java.util.Optional;
 /**
  * Employee representation.
  */
-public class Employee {
+public class Employee implements Comparable<Employee> {
     private static Logger LOG = LoggerFactory.getLogger(Employee.class);
 
     /**
@@ -27,16 +27,18 @@ public class Employee {
      */
     private int minTime;
 
+    private Integer priority;
+
     public static Employee operator(int maxTime, int minTime) {
-        return new Employee(EmployeeType.OPERATOR, maxTime, minTime);
+        return new Employee(EmployeeType.OPERATOR, maxTime, minTime,0);
     }
 
     public static Employee supervisor(int maxTime, int minTime) {
-        return new Employee(EmployeeType.SUPERVISOR, maxTime, minTime);
+        return new Employee(EmployeeType.SUPERVISOR, maxTime, minTime,2);
     }
 
     public static Employee director(int maxTime, int minTime) {
-        return new Employee(EmployeeType.DIRECTOR, maxTime, minTime);
+        return new Employee(EmployeeType.DIRECTOR, maxTime, minTime,4);
     }
 
 
@@ -45,6 +47,7 @@ public class Employee {
             LOG.debug("{} processing message: {}", Thread.currentThread().getName(), message.getOrder());
             long processTime = waitingTime();
             Thread.sleep(processTime);
+            LOG.debug("{} finished processing message: {}", Thread.currentThread().getName(), message.getOrder());
             return Optional.of(new MessageReport(message,(int) (processTime/1000), type ));
         } catch (InterruptedException e) {
             LOG.error("The Thread was interrupted, customer communication was shut down");
@@ -52,11 +55,14 @@ public class Employee {
         return Optional.empty();
     }
 
-    private Employee(EmployeeType type, int maxTime, int minTime) {
+    private Employee(EmployeeType type, int maxTime, int minTime, int priority) {
         this.type = type;
         this.maxTime = maxTime;
         this.minTime = minTime;
+        this.priority = priority;
     }
+
+
 
     public EmployeeType getType() {
         return type;
@@ -66,4 +72,8 @@ public class Employee {
         return ((long) (Math.random() * (maxTime - minTime)) + minTime) * 1000;
     }
 
+    @Override
+    public int compareTo(Employee o) {
+        return priority.compareTo(o.priority);
+    }
 }

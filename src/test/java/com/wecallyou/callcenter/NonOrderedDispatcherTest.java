@@ -2,9 +2,11 @@ package com.wecallyou.callcenter;
 
 import com.wecallyou.callcenter.dispatchers.Dispatcher;
 import com.wecallyou.callcenter.dispatchers.Dispatchers;
-import com.wecallyou.callcenter.dispatchers.exceptions.MaximumMessagesReached;
 import com.wecallyou.callcenter.report.MessageReport;
+import org.junit.Rule;
 import org.junit.Test;
+import repeat.Repeat;
+import repeat.RepeatRule;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +15,6 @@ import static com.wecallyou.callcenter.EmployeeType.*;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class NonOrderedDispatcherTest {
 
@@ -22,20 +23,25 @@ public class NonOrderedDispatcherTest {
     private static final int NUMBER_OF_OPERATORS = 1;
     private static final int NUMBER_OF_SUPERVISORS = 1;
     private static final int NUMBER_OF_DIRECTORS = 1;
-    private static final int MAX_QUEUE_SIZE = 2;
 
     private static Message message(int order) {
         return new Message(order);
     }
 
+    @Rule
+    public RepeatRule repeatRule = new RepeatRule();
+
     @Test
+    @Repeat(times = 10, threads = 5)
     public void whenMaximumReachedStartQueueUp() throws Exception {
         Dispatcher dispatcher = Dispatchers.nonOrderGuaranteeDispatcher(NUMBER_OF_OPERATORS, NUMBER_OF_SUPERVISORS,
-                NUMBER_OF_DIRECTORS, MAX_QUEUE_SIZE, MIN_PROCESSING_TIME, MAX_PROCESSING_TIME);
+                NUMBER_OF_DIRECTORS, MIN_PROCESSING_TIME, MAX_PROCESSING_TIME);
 
         for (int i = 0; i < 4; i++) {
             dispatcher.dispatchCall(new Message(i));
         }
+
+        dispatcher.isDone();
 
         await().atMost(30, TimeUnit.SECONDS).until(() -> dispatcher.isDone());
         Map<Message, MessageReport> report = dispatcher.getReport();
@@ -48,18 +54,13 @@ public class NonOrderedDispatcherTest {
 
 
     @Test
+    @Repeat(times = 10, threads = 5)
     public void whenMaximumReachedQueuUpUntil2() throws Exception {
         Dispatcher dispatcher = Dispatchers.nonOrderGuaranteeDispatcher(NUMBER_OF_OPERATORS, NUMBER_OF_SUPERVISORS,
-                NUMBER_OF_DIRECTORS, MAX_QUEUE_SIZE, MIN_PROCESSING_TIME, MAX_PROCESSING_TIME);
-        boolean exceptionThrown = false;
+                NUMBER_OF_DIRECTORS, MIN_PROCESSING_TIME, MAX_PROCESSING_TIME);
 
         for (int i = 0; i < 6; i++) {
-            try {
-                dispatcher.dispatchCall(new Message(i));
-            }
-            catch (MaximumMessagesReached e){
-                exceptionThrown = true;
-            }
+            dispatcher.dispatchCall(new Message(i));
         }
 
         await().atMost(30, TimeUnit.SECONDS).until(() -> dispatcher.isDone());
@@ -67,8 +68,7 @@ public class NonOrderedDispatcherTest {
         assertThat(report.get(message(0)).getEmployeeType(), is(OPERATOR));
         assertThat(report.get(message(1)).getEmployeeType(), is(SUPERVISOR));
         assertThat(report.get(message(2)).getEmployeeType(), is(DIRECTOR));
-        assertThat(report.size(), is(5));
-        assertTrue(exceptionThrown);
+        assertThat(report.size(), is(6));
         dispatcher.shutdown(15);
     }
 

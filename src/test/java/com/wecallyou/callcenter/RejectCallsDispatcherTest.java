@@ -4,7 +4,10 @@ import com.wecallyou.callcenter.dispatchers.Dispatcher;
 import com.wecallyou.callcenter.dispatchers.Dispatchers;
 import com.wecallyou.callcenter.dispatchers.exceptions.NoEmployeesAvailableException;
 import com.wecallyou.callcenter.report.MessageReport;
+import org.junit.Rule;
 import org.junit.Test;
+import repeat.Repeat;
+import repeat.RepeatRule;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +30,11 @@ public class RejectCallsDispatcherTest {
         return new Message(order);
     }
 
+    @Rule
+    public RepeatRule repeatRule = new RepeatRule();
+
     @Test
+    @Repeat(times = 10, threads = 5)
     public void whenMaximumReachedFail() throws Exception{
         Dispatcher dispatcher = Dispatchers.rejectCallsDispatcher(NUMBER_OF_OPERATORS, NUMBER_OF_SUPERVISORS, NUMBER_OF_DIRECTORS,
                 MIN_PROCESSING_TIME, MAX_PROCESSING_TIME);
